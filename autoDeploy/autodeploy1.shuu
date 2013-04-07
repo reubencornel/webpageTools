@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+cd $WEBSITE 
+make clean 
+make all 
+rm website.tar.gz 
+tar -czf website.tar.gz website/ 
+sftp rfcornel@tty.freeshell.org<<EOF
+put website.tar.gz
+exit
+EOF

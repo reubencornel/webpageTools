@@ -1,0 +1,70 @@
+; Loading #p"/home/reuben/ProvingGrounds/webpage_tools/Lisp/pagegen.x86f".
+<HTML>
+<HEAD>
+<TITLE>
+Reuben's Webpage
+</TITLE>
+<LINK rel = 'stylesheet'  href = 'sitestyle.css'  type = 'text/css' />
+</HEAD>
+<BODY>
+<DIV id = 'header' >
+<CENTER>
+<H1>
+test page
+</H1>
+</CENTER>
+</DIV>
+<DIV class = 'content' >
+<P>
+This is going to be a long drawn paragraph that would test the resilience of lisp.This is a 
+<A HREF = 'test.html' >
+link
+</A>
+</P>
+<BR/>
+<P>
+This is going to be another paragraph
+<B>
+This is some bold text
+</B>
+<A HREF = 'first.html' >
+self link
+</A>
+</P>
+<P>
+This is another paragraph with a 
+<A HREF = 'glossary.html#glossary' >
+glossary
+</A>
+</P>
+<div id="navCode">0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public static void main(String[] args)
+<br />
+1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+<br />
+2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;System.out.println("Hello World");
+<br />
+3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+<br />
+</div></DIV>
+<DIV id = 'navAlpha' >
+<A HREF = 'test' >
+test
+</A>
+<BR/>
+<A HREF = 'test' >
+test
+</A>
+<BR/>
+</DIV>
+<DIV id = 'navBeta' >
+<A HREF = 'test' >
+test
+</A>
+<BR/>
+<A HREF = 'test' >
+test
+</A>
+<BR/>
+</DIV>
+</BODY>
+</HTML>

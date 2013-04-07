@@ -1,0 +1,4 @@
+(gen-html "photoalbum.html"
+(photo-album '(("image1.jpg" "First Photo")
+	("image2.jpg" "Second Photo"))
+	"Flowers"))

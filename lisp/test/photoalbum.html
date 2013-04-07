@@ -1,0 +1,149 @@
+<HTML>
+<HEAD>
+<LINK rel = 'stylesheet'  href = 'sitestyle.css'  type = 'text/css' />
+<TITLE>
+Flowers
+</TITLE>
+<SCRIPT>
+var imageList = ['image1.jpg','image2.jpg'];indexValue = 0;
+standardHeight = 300;
+standardWidth = 500;
+
+function changeImage()
+{
+
+	document.mainimage.src = imageList[indexValue]; 
+//	alert(document.mainimage.clientHeight)
+	
+	var caption = 'div' + imageList[indexValue];  
+	
+	if (document.getElementById(caption) == null){
+		document.getElementById('caption').innerHTML = '&nbsp;'
+	}else{
+		document.getElementById('caption').innerHTML =  document.getElementsByName(caption)[0].innerHTML;
+	}
+}
+
+function prevImage()
+{
+	if (indexValue == 0) {
+		indexValue = imageList.length - 1;
+	}else{
+		indexValue--;
+	}
+	changeImage();
+}
+
+function nextImage()
+{
+	var list = document.getElementById('optionlist');
+	if (indexValue == imageList.length - 1 ){
+		indexValue = 0;
+	}else{
+		indexValue++;
+	}
+	
+	changeImage();
+}
+</SCRIPT>
+</HEAD>
+<BODY ONLOAD = 'javascript:changeImage()' >
+<DIV id = 'header' >
+<CENTER>
+<H1>
+Flowers
+</H1>
+</CENTER>
+</DIV>
+<DIV class = 'content' >
+<div id="divimage1.jpg" name = "divimage1.jpg" style='display:none'>First Photo</div><div id="divimage2.jpg" name = "divimage2.jpg" style='display:none'>Second Photo</div>
+<TABLE ALIGN = 'center'  BORDER = '0' >
+<TR>
+<TD COLSPAN = '3'  ALIGN = 'center' >
+<IMG NAME = 'mainimage'  BORDER = '1' />
+</TD>
+</TR>
+<TR>
+<TD ALIGN = 'center'  COLSPAN = '3'  BORDER = '1' >
+<DIV ID = 'caption' >
+</DIV>
+</TD>
+</TR>
+<TR>
+<TD ALIGN = 'left' >
+<INPUT TYPE = 'button'  VALUE = '<- Back'  ONCLICK = 'javascript:prevImage()' />
+</TD>
+<TD>
+</TD>
+<TD ALIGN = 'right' >
+<INPUT TYPE = 'button'  VALUE = 'Next ->'  ONCLICK = 'javascript:nextImage()' />
+</TD>
+</TR>
+</TABLE>
+</DIV>
+<DIV id = 'navAlpha' >
+<A HREF = 'aboutme.html' >
+About Me
+</A>
+<BR/>
+<BR/>
+<A HREF = 'linklist.html' >
+Link List Tutorial
+</A>
+<BR/>
+<BR/>
+<A HREF = 'trouble_shooting.html' >
+Trouble Shooting Linux
+</A>
+<BR/>
+<BR/>
+<A HREF = 'page_script.html' >
+Scripts used to Generate this Site
+</A>
+<BR/>
+<BR/>
+<A HREF = 'project.html' >
+My Projects
+</A>
+<BR/>
+<BR/>
+<A HREF = 'misc.html' >
+Miscellaneous
+</A>
+<BR/>
+<BR/>
+<A HREF = 'unix_handouts.html' >
+Unix Handouts
+</A>
+<BR/>
+<BR/>
+<A HREF = 'whats_new.html' >
+Whats New
+</A>
+<BR/>
+<BR/>
+<A HREF = 'index.html' >
+Home Sweet Home
+</A>
+<BR/>
+<BR/>
+</DIV>
+<DIV id = 'navBeta' >
+<A HREF = 'k1000_rally.html' >
+My Experiences at the K 1000 Rally
+</A>
+<BR/>
+<BR/>
+<A HREF = 'seg_fault.html' >
+How to debug segmentation faults
+</A>
+<BR/>
+<BR/>
+<A HREF = 'ed_tutorial.html' >
+An ed tutorial
+</A>
+<BR/>
+<BR/>
+</DIV>
+</BODY>
+</HTML>

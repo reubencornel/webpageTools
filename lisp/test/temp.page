@@ -1,0 +1,22 @@
+(gen-html1
+ "first.html"
+ (page
+  (pagetitle "test page")
+  (glossary-entry "test page" "This is a page that is used to test")
+  (content
+   (p
+    "This is going to be a long drawn paragraph that would test the resilience of lisp." "This is a " (reference "test.html" "link")) 
+   (br)
+   (p 
+    "This is going to be another paragraph" 
+    (b "This is some bold text")
+	     (reference "first.html" "self link"))
+   (p "This is another paragraph with a " 
+      (glossary "glossary"))
+   ;; (code "public static void main(String[] args)"
+   ;; 	 "{"
+   ;; 	 "System.out.println(\"Hello World\");"
+   ;; 	 "}"))
+   )
+  (include-navalpha)))
+
