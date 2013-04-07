@@ -210,7 +210,9 @@
 		 (pagetitle title-string)
 		 (content
 		  (concatenate 'string 
-			       (create-TOC title-list)
+                               (if (not (zerop (length title-list))) ;; add a toc only if we find toc titles
+                                   (create-TOC title-list)
+                                   "")
 			       (apply #'concatenate 
 				      (append (list 'string)
 					      page-content))))
