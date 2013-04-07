@@ -1,6 +1,5 @@
-(in-package :cl-user)
-;(asdf:oos 'asdf:load-op 'cl-ppcre)
 ;; Load 
+(load "src/pagegen.lisp")
 
 (defun read-file(file)
   (assert (probe-file file))

@@ -1,4 +1,4 @@
-;(asdf:oos 'asdf:load-op 'cl-ppcre)
+(ql:quickload 'cl-ppcre)
 
 (defvar *default-navalpha* "/Users/reuben/webpage/navalpha.menu")
 (defvar *default-navbeta* "/Users/reuben/navbeta.menu")
