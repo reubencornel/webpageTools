@@ -1,6 +1,8 @@
 ;; Load 
 (load "src/pagegen.lisp")
 
+(defparameter *commands* '("NO-NAVALPHA" "NO-NAVBETA"))
+
 (defun read-file(file)
   (assert (probe-file file))
   (let ((file-string ""))
@@ -110,23 +112,25 @@
 			   ;;   (title "Computer Arithemetic")
 			   ;;   (subtitle "Mathematical formalisms"))))))))
 
+
 (defun title-p(x)
+  "Predicate for identifying a title"
   (not (null (cl-ppcre:scan "^\\*\\* " x))))
-  ;; (assert (stringp x))
-  ;; (let ((first-3 (subseq x 0 3)))
-  ;;   (string= "** " first-3)))
 
 (defun subtitle-p(x)
+  "Predicate for indentfying a subtitle"
   (not (null (cl-ppcre:scan "^\\*\\*\\* " x))))
-  ;; (assert (stringp x))
-  ;; (let ((first-4 (subseq x 0 4)))
-  ;;   (string= "*** " first-4)))
 
 (defun page-title-p(x)
+  "Predicate for identifying a page title"
   (not (null (cl-ppcre:scan "^\\* " x))))
-  ;; (assert (stringp x))
-  ;; (let ((first-2 (subseq x 0 2)))
-  ;;   (string= "* " first-2)))
+
+
+(defun command-p(x)
+  "Predicate to identify if a given line has a command"
+  (not (null (cl-ppcre:scan "^\\# " x))))
+
+
 
 (defun get-output-file-name(filename)
   (assert (stringp filename))
@@ -145,6 +149,9 @@
 	 (title-string "")
 	 (title-list nil)
          (code-mode nil)
+         (navalpha t)
+         (navbeta t)
+         (no-toc nil)
 	 (page-content 
 	  (mapcar #'(lambda(x)
 		      (cond ((title-p x) 
@@ -157,6 +164,12 @@
 			     (h1 (a (list (list 'name (format nil "title~a" title-counter))
 					  (list 'class "title"))
 				    (subseq x 2))))
+                            ((command-p x) (let ((command (string-trim " " (subseq x 2))))                                           
+                                             (cond ((string= command "no-navalpha") (setf navalpha nil))
+                                                   ((string= command "no-navbeta") (setf navbeta nil))
+                                                   ((string= command "no-toc") (setf no-toc t)))
+                                             ""))
+                                                    
 			    ((page-title-p x) (setf title-string (subseq x 2))
 			     "")
                             ((code-start-p x) (progn
@@ -191,7 +204,11 @@
 							       (concatenate 'string str " ")))
 						       (cl-ppcre:split (coerce '(#\Newline) 'string) ;; Split the contents of the file on newline
 								       (read-file filename)))))))))
-    (values title-counter subtitle-counter title-string title-list page-content)))
+    (values title-counter subtitle-counter title-string 
+            (if no-toc
+                '()
+                title-list)
+            page-content navalpha navbeta)))
 
 	      ;;       (let* ((title-list nil)
 	      ;; 	     (title-counter 0)
@@ -205,7 +222,7 @@
 			 :direction :output
 			 :if-exists :supersede)
       (format out 
-	      (multiple-value-bind (title-counter subtitle-counter title-string title-list page-content) (generate-page-content filename)
+	      (multiple-value-bind (title-counter subtitle-counter title-string title-list page-content nav-alpha nav-beta) (generate-page-content filename)
 		(page 
 		 (pagetitle title-string)
 		 (content
@@ -216,8 +233,8 @@
 			       (apply #'concatenate 
 				      (append (list 'string)
 					      page-content))))
-;		 (include-navalpha)
-;		 (include-navbeta)
+		 (if nav-alpha  (include-navalpha) "")
+                 (if nav-beta (include-navbeta) "")
 ))))))
 
 (defun main(command-line-args)
