@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+code.pl < $1 >op.article
+cp $1 $1.backup
+mv op.article $1
+articleGen $1
+mv $1.backup $1
