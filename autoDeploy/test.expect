@@ -1,5 +1,0 @@
-spawn sftp rfcornel@tty.freeshell.org
-expect "sftp>"
-send "put autodeploy.sh\r"
-expect "sftp>"
-send "exit\r"
