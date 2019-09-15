@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+echo "["`date "+%d %B %Y,%r %Z"`"]|" > $WEBSITE/whats_new/log_temp
+echo "Opening $WEBSITE/whats_new/log_temp"
+/usr/bin/emacs $WEBSITE/whats_new/log_temp
+
+echo "
+#" >> $WEBSITE/whats_new/log_temp
+
+cat $WEBSITE/whats_new/log_temp $WEBSITE/whats_new/log > $WEBSITE/whats_new/temp
+mv $WEBSITE/whats_new/temp $WEBSITE/whats_new/log
+ls

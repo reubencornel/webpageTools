@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+echo $1
+for file in `ls *.html`; do
+    echo "Cleaning up $file"
+    tidy -m -q -asxhtml $file
+done
