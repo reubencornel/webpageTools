@@ -1,8 +1,10 @@
-all: pageGen articleGen menuConvert
-
 binDir=${PWD}/bin
 srcDir=${PWD}/src
 
+all: pageGen articleGen menuConvert $(binDir)
+
+$(binDir): $(binDir)
+	mkdir $(binDir)
 
 pageGen: $(srcDir)/pagegen.lisp
 	@echo "Compiling the page generator..."
