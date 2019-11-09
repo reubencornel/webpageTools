@@ -1,7 +1,7 @@
 (ql:quickload 'cl-ppcre)
 
-(defvar *default-navalpha* "/Users/reuben/webpage/navalpha.menu")
-(defvar *default-navbeta* "/Users/reuben/navbeta.menu")
+(defvar *default-navalpha* "/home/reuben/webpage/navalpha.menu")
+(defvar *default-navbeta* "/home/reuben/navbeta.menu")
 (defun return-string-from-list(string-list)
   (string-concatenator-helper-function "" (flatten-list string-list)))
 
