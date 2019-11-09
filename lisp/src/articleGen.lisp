@@ -193,7 +193,7 @@
 		      (setf title-list
 			    (append title-list
 				    (list (list 'subtitle
-						n	       (subseq x 3)))))
+						(subseq x 3)))))
 		      (h2 (a (list (list 'name (format nil "subtitle~a~a" title-counter subtitle-counter))
 				   (list 'class "title"))
 			     (subseq x 3))))
@@ -211,8 +211,6 @@
 						      (concatenate 'string str " ")))
 						(cl-ppcre:split (coerce '(#\Newline) 'string) ;; Split the contents of the file on newline
 								file-input))))))))
-    (print "code")
-    (print code-content)
     (values title-counter subtitle-counter title-string
             (if no-toc
                 '()
