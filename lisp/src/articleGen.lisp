@@ -1,4 +1,4 @@
-;; Load 
+;; Load
 (load "src/pagegen.lisp")
 
 (defparameter *commands* '("NO-NAVALPHA" "NO-NAVBETA"))
@@ -10,7 +10,7 @@
       (do ((line (read-line in nil)
 		 (read-line in nil)))
 	  ((null line) file-string)
-	(setf file-string (concatenate 'string file-string 
+	(setf file-string (concatenate 'string file-string
 				       (coerce '(#\newline) 'string)
 				       line))))))
 
@@ -24,7 +24,7 @@
 	     (cond ((null list) acc)
 		   ((funcall predicate (car list))
 		    (if (null last-val)
-			(iterate predicate 
+			(iterate predicate
 				 (cdr list)
 				 (append acc (list (list (car list))))
 				 t)
@@ -32,7 +32,7 @@
 				 (cdr list)
 				 (let ((last-group (first (last acc)))
 				       (rest (butlast acc)))
-				   (assert (or (consp last-group) 
+				   (assert (or (consp last-group)
 					       (null last-group)))
 				   (assert (or (consp rest)
 					       (null rest)))
@@ -41,7 +41,7 @@
 						   (list (car list))))))
 				 t)))
 		   (t (if last-val
-			  (iterate predicate 
+			  (iterate predicate
 				   (cdr list)
 				   (append acc (list (list (car list))))
 				   (funcall predicate (car list)))
@@ -49,7 +49,7 @@
 				   (cdr list)
 				   (let ((last-group (first (last acc)))
 					 (rest (butlast acc)))
-				     (assert (or (consp last-group) 
+				     (assert (or (consp last-group)
 						 (null last-group)))
 				     (Assert  (or (consp rest)
 						  (null rest)))
@@ -69,7 +69,7 @@
 					    x)))
 			     result)))
       result)))
- 
+
 (defvar hr (htmlmacro hr t))
 
 (defun create-TOC(list)
@@ -91,11 +91,11 @@
 					       '((class "TOCTitle"))
 					       (a (list (list 'href
 							      (format nil "#title~a" title-counter)))
-						  
-						  (format nil "~a. " 
+
+						  (format nil "~a. "
 							  title-counter)
 						  (cdr y))))
-				     
+
 				     ((equal (car y)
 					     'subtitle)
 				      (incf subtitle-counter)
@@ -103,7 +103,7 @@
 					       '((class "TOCSubtitle"))
 					       (a (list (list 'href
 							      (format nil "#subtitle~a~a" title-counter subtitle-counter)))
-						  
+
 					       (format nil "~a.~a " title-counter subtitle-counter)
 					       (cdr y))))))
 			   list))))))
@@ -138,12 +138,12 @@
 	       ".html"))
 
 (defun code-start-p(x)
-  (string= "CODE_START" x))
+  (string= "CODE_START" (string-trim '(#\Space #\Tab #\Newline) x)))
 
 (defun code-end-p(x)
-  (string= "CODE_END" x))
+  (string= "CODE_END" (string-trim '(#\Space #\Tab #\Newline) x)))
 
-(defun generate-page-content(filename)
+(defun generate-page-content(file-input)
   (let* ((title-counter 0)
 	 (subtitle-counter 0)
 	 (title-string "")
@@ -152,62 +152,71 @@
          (navalpha t)
          (navbeta t)
          (no-toc nil)
-	 (page-content 
-	  (mapcar #'(lambda(x)
-		      (cond ((title-p x) 
-			     (incf title-counter)
-			     (setf subtitle-counter 0)
-			     (setf title-list
-				   (append title-list
-					   (list (list 'title 
-						       (subseq x 2)))))
-			     (h1 (a (list (list 'name (format nil "title~a" title-counter))
-					  (list 'class "title"))
-				    (subseq x 2))))
-                            ((command-p x) (let ((command (string-trim " " (subseq x 2))))                                           
-                                             (cond ((string= command "no-navalpha") (setf navalpha nil))
-                                                   ((string= command "no-navbeta") (setf navbeta nil))
-                                                   ((string= command "no-toc") (setf no-toc t)))
-                                             ""))
-                                                    
-			    ((page-title-p x) (setf title-string (subseq x 2))
-			     "")
-                            ((code-start-p x) (progn
-                                                (setf code-mode t)
-                                                x))
-                            ((code-end-p x) (progn
-                                              (setf code-mode nil)
-                                              x))
-                            (code-mode x)
-                            
-			    ((subtitle-p x) 
-			     (incf subtitle-counter)
-			     (setf title-list
-				   (append title-list
-					   (list (list 'subtitle 
-						       (subseq x 3)))))
-			     (h2 (a (list (list 'name (format nil "subtitle~a~a" title-counter subtitle-counter))
-					  (list 'class "title"))
-				    (subseq x 3))))
-			   
-			    (t (p x))))
-		  (remove-if #'(lambda(x) ;; Remove empty lines they have served their purpose
-				 (cl-ppcre:scan "^$" x))
-			     (mapcar #'(lambda(y) ;;Concatenate all groups into single strings
-					 (apply #'concatenate (append (list 'string )
-								      y)))
-				     (group-by #'(lambda(x) ;; Group lines based on blank lines
-						   (cl-ppcre:scan "^$" x))
-					       (mapcar #'(lambda(str) ;; add a space to the end of every line as long as it is
-							   (if (cl-ppcre:scan "^$" str) ;; not a blank line
-							       str
-							       (concatenate 'string str " ")))
-						       (cl-ppcre:split (coerce '(#\Newline) 'string) ;; Split the contents of the file on newline
-								       (read-file filename)))))))))
-    (values title-counter subtitle-counter title-string 
+	 (code-content nil)
+	 (page-content
+	  (mapcar
+	   #'(lambda(x)
+
+	       (cond ((title-p x)
+		      (incf title-counter)
+		      (setf subtitle-counter 0)
+		      (setf title-list
+			    (append title-list
+				    (list (list 'title
+						(subseq x 2)))))
+		      (h1 (a (list (list 'name (format nil "title~a" title-counter))
+				   (list 'class "title"))
+			     (subseq x 2))))
+		     ((command-p x) (let ((command (string-trim " " (subseq x 2))))
+				      (cond ((string= command "no-navalpha") (setf navalpha nil))
+					    ((string= command "no-navbeta") (setf navbeta nil))
+					    ((string= command "no-toc") (setf no-toc t)))
+				      ""))
+
+		     ((page-title-p x) (setf title-string (subseq x 2))
+		      "")
+		     ((code-start-p x) (progn
+					 (setf code-content nil)
+					 (print "CODE_START:")
+					 (setf code-mode t)
+					 x))
+		     ((code-end-p x) (progn
+				       (setf code-mode nil)
+				       (print "CODE_END:")
+				       (code code-content)))
+		     (code-mode
+		      (progn
+			(setf code-content (append code-content (list "~&" x)))
+			""))
+		     ((subtitle-p x)
+		      (incf subtitle-counter)
+		      (setf title-list
+			    (append title-list
+				    (list (list 'subtitle
+						n	       (subseq x 3)))))
+		      (h2 (a (list (list 'name (format nil "subtitle~a~a" title-counter subtitle-counter))
+				   (list 'class "title"))
+			     (subseq x 3))))
+		     (t (p x))))
+	   (remove-if #'(lambda(x) ;; Remove empty lines they have served their purpose
+			  (cl-ppcre:scan "^$" x))
+		      (mapcar #'(lambda(y) ;;Concatenate all groups into single strings
+				  (apply #'concatenate (append (list 'string )
+							       y)))
+			      (group-by #'(lambda(x) ;; Group lines based on blank lines
+					    (cl-ppcre:scan "^$" x))
+					(mapcar #'(lambda(str) ;; add a space to the end of every line as long as it is
+						    (if (cl-ppcre:scan "^$" str) ;; not a blank line
+							str
+						      (concatenate 'string str " ")))
+						(cl-ppcre:split (coerce '(#\Newline) 'string) ;; Split the contents of the file on newline
+								file-input))))))))
+    (print "code")
+    (print code-content)
+    (values title-counter subtitle-counter title-string
             (if no-toc
                 '()
-                title-list)
+	      title-list)
             page-content navalpha navbeta)))
 
 	      ;;       (let* ((title-list nil)
@@ -215,22 +224,22 @@
 	      ;; 	     (title-string "")
 	      ;; 	     (subtitle-counter 0)
 	      ;; 	     (page-content (generate-page-content filename)))
-	
+
 (defun compile-article(filename)
   (let ((output-file (get-output-file-name filename)))
     (with-open-file (out output-file
 			 :direction :output
 			 :if-exists :supersede)
-      (format out 
-	      (multiple-value-bind (title-counter subtitle-counter title-string title-list page-content nav-alpha nav-beta) (generate-page-content filename)
-		(page 
+      (format out
+	      (multiple-value-bind (title-counter subtitle-counter title-string title-list page-content nav-alpha nav-beta) (generate-page-content (read-file filename))
+		(page
 		 (pagetitle title-string)
 		 (content
-		  (concatenate 'string 
+		  (concatenate 'string
                                (if (not (zerop (length title-list))) ;; add a toc only if we find toc titles
                                    (create-TOC title-list)
                                    "")
-			       (apply #'concatenate 
+			       (apply #'concatenate
 				      (append (list 'string)
 					      page-content))))
 		 (if nav-alpha  (include-navalpha) "")
@@ -245,7 +254,7 @@
 		    (let ((arg (car args)))
 					;Check if the extension is page...then we have a file
 		      (if (string= "article"
-				   (subseq arg 
+				   (subseq arg
 					   (- (length arg) 7)))
 			  (compile-article arg)
 			  (command-loop (cdr args))))))))
