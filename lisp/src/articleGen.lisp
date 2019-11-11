@@ -174,16 +174,18 @@
 	(subtitle-counter 0))
     (lambda (grouped-lines)
       (let ((first-line (car grouped-lines)))
-	(cond ((page-title-p first-line) (list 'page-title (subseq first-line 2)))
+	(cond ((page-title-p first-line) (list 'pagetitle (subseq first-line 2)))
 	      ((title-p first-line)
 	       (setf subtitle-counter 0)
 	       (incf title-counter)
-	       (list 'title (list 'title-count title-counter) (subseq first-line 2)))
+	       (list 'article-title (list 'quote (list 'title-count title-counter)) (subseq first-line 2)))
 	       ((subtitle-p first-line)
 		(incf subtitle-counter)
-		(list 'subtitle (list 'title-count title-counter 'subtitle-count subtitle-counter) (subseq first-line 2)))
+		(list 'subtitle (list 'quote (list 'title-count title-counter 'subtitle-count subtitle-counter)) (subseq first-line 2)))
 	      ((command-p first-line) (cons 'command grouped-lines))
 	      (t (cons 'p grouped-lines)))))))
+
+(defun command(&rest arg))
 
 (defun is-close-code-tag(leaf)
   (and (stringp leaf)
@@ -231,14 +233,26 @@
     (mapcar event-emitter
 	    (pre-process-input input-string))))
 
-(defun page-title(args)
-  (h1 args))
+;; (defun page-title(args)
+;;   (print args)
+;;   (h1 (list args))
+;;   "")
 
-(defun title(args)
-  (h2 args))
+(defun article-title(&rest args)
+  (h1 (a (list (list 'name (format nil "title~a" (second (first args))))
+	       (list 'class "title"))
+	 (second args))))
 
-(defun subtitle(args)
-  (p (b args)))
+(defun subtitle(&rest args)
+    (h2 (a (list (list 'name (format nil "subtitle~a~a" (second (first args))  (fourth (first args))))
+		 (list 'class "subtitle"))
+	   (second args))))
+
+
+;; (defun title(args)
+;;   (print args)
+;;   (h1 (cdr (cdr args))))
+
 
 (defun string-concatenator-with-helper-function (init-string separator string-list)
   (cond ((null string-list) init-string)
@@ -276,12 +290,6 @@
   (merge-strings
    (merge-code-leaves
     (build-basic-parse-tree string))))
-
-(defun command(str)
-  "")
-
-(defun page-title(str)
-  "")
 
 (defun generate-page-content(string)
   (let* ((title-counter 0)
