@@ -72,47 +72,6 @@
 
 (defvar hr (htmlmacro hr t))
 
-(defun create-TOC(list)
-  (assert (consp list))
-  (let ((title-counter 0)
-	(subtitle-counter 0))
-    (div '((id "TOCWrapper"))
-	 (div '((id "tableofcontents"))
-	      (div '((class "TOCHeader"))
-		   "Table Of Contents"
-		   (hr))
-	      (div '((class "TOCContents"))
-		   (mapcar #'(lambda(y)
-			       (cond ((equal (car y)
-					     'title)
-				      (incf title-counter)
-				      (setf subtitle-counter 0)
-				      (funcall #'div
-					       '((class "TOCTitle"))
-					       (a (list (list 'href
-							      (format nil "#title~a" title-counter)))
-
-						  (format nil "~a. "
-							  title-counter)
-						  (cdr y))))
-
-				     ((equal (car y)
-					     'subtitle)
-				      (incf subtitle-counter)
-				      (funcall #'div
-					       '((class "TOCSubtitle"))
-					       (a (list (list 'href
-							      (format nil "#subtitle~a~a" title-counter subtitle-counter)))
-
-					       (format nil "~a.~a " title-counter subtitle-counter)
-					       (cdr y))))))
-			   list))))))
-
-			   ;; '((title "Introduction")
-			   ;;   (title "Computer Arithemetic")
-			   ;;   (subtitle "Mathematical formalisms"))))))))
-
-
 (defun title-p(x)
   "Predicate for identifying a title"
   (not (null (cl-ppcre:scan "^\\*\\* " x))))
@@ -139,6 +98,34 @@
 
 (defun code-end-p(x)
   (string= "CODE_END" x))
+
+(defun generate-toc-entries(titles)
+  (mapcar #'(lambda(title)
+	      (let ((title-type (car title)))
+		(cond ((equal title-type 'ARTICLE-TITLE)
+		       (list 'div (list 'quote '((class "TOCTitle")))
+			     (append
+			      (list 'a (list 'quote (list (list 'href (format nil "#title~a" (second (second (second title))))))))
+			      (cdr (cdr title)))))
+		      ((equal title-type 'SUBTITLE)
+		       (append
+			(list 'div (list 'quote '((class "TOCSubtitle")))
+			      (append 
+			       (list 'a (list 'quote (list (list 'href (format nil "#subtitle~a~a" (second (second (second title)))
+									       (fourth (second (Second title))))))) )
+			       (cdr (cdr title))))))
+		      (t nil))))
+	  titles))
+
+(defun create-new-TOC(titles)
+  (list 'div  (list 'quote '((id "TOCWrapper")))
+	(list 'div (list 'quote '((id "tableofcontents")))
+	      (list 'div (list 'quote '((class "TOCHeader")))
+		    "Table Of Contents"
+		    (list 'hr))
+	      (append
+	       (list 'div (list 'quote '((class "TOCContents"))))
+	       (generate-toc-entries titles)))))
 
 
 (defun split-string-into-lines(string)
@@ -192,6 +179,7 @@
   (and (stringp leaf)
        (string= "<CODE-TAG>" (string-trim " " leaf))))
 
+
 (defun merge-code-leaves-helper (tree accumulator code-accumulator is-in-code)
   (cond ((null tree)
 	 (if (> (length code-accumulator) 1)
@@ -230,11 +218,6 @@
     (mapcar event-emitter
 	    (pre-process-input input-string))))
 
-;; (defun page-title(args)
-;;   (print args)
-;;   (h1 (list args))
-;;   "")
-
 (defun article-title(&rest args)
   (h1 (a (list (list 'name (format nil "title~a" (second (first args))))
 	       (list 'class "title"))
@@ -244,11 +227,6 @@
     (h2 (a (list (list 'name (format nil "subtitle~a~a" (second (first args))  (fourth (first args))))
 		 (list 'class "subtitle"))
 	   (second args))))
-
-
-;; (defun title(args)
-;;   (print args)
-;;   (h1 (cdr (cdr args))))
 
 
 (defun string-concatenator-with-helper-function (init-string separator string-list)
@@ -306,16 +284,20 @@
 		(find command commands :test #'string=))
 	    supported-commands)))
 
+(defun build-page(commands parse-tree)
+  (if (find 'NO-TOC commands)
+      parse-tree
+      (append
+       (list (first parse-tree)
+	     (append 
+	      (list 'div (list 'quote (list (list 'class "Content")))
+		    (create-new-TOC (filter-titles parse-tree)))
+	      (cdr parse-tree))))))
+      
 (defun compile-article(filename)
   (let* ((parse-tree (parse-content (read-file filename)))
-	 (titles (filter-titles parse-tree))
 	 (commands (interpret-commands parse-tree)))
-    (format nil (apply #'page (remove-if #'(lambda(x)
-					     (equal (car x) 'COMMAND))
-					 parse-tree)))))
-
-
-
+    (format nil (apply #'page (build-page commands parse-tree)))))
 
 ;; (defun compile-article(filename)
 ;;   (let ((output-file (get-output-file-name filename)))
