@@ -284,16 +284,56 @@
 		(find command commands :test #'string=))
 	    supported-commands)))
 
-(defun build-page(commands parse-tree)
+(defun add-toc(commands parse-tree)
   (if (find 'NO-TOC commands)
       parse-tree
-      (append
-       (list (first parse-tree)
-	     (append 
-	      (list 'div (list 'quote (list (list 'class "Content")))
-		    (create-new-TOC (filter-titles parse-tree)))
-	      (cdr parse-tree))))))
+      (append (list (first parse-tree))
+	      (list (create-new-TOC (filter-titles parse-tree)))
+	      (cdr parse-tree))))
+
+(defun add-navbeta(commands parse-tree)
+  (if (find 'NO-NAVBETA commands)
+      parse-tree
+      (let* ((local-navbeta-path (concatenate 'string (sb-ext:posix-getenv "PWD") "/" "navbeta.menu"))
+	     (file (if (null (probe-file  local-navbeta-path))
+				 *default-navbeta*
+				 local-navbeta-path)))
+	(with-open-file (in  file
+			     :if-does-not-exist nil)
+	  (print file)
+	  (if (null in)
+	      "File not found"
+	      (append
+	       parse-tree
+	       (list (read in))))))))
       
+
+(defun add-navalpha(commands parse-tree)
+    (if (find 'NO-NAVALPHA commands)
+      parse-tree
+      (with-open-file (in *default-navalpha*
+			  :if-does-not-exist nil)
+	(append
+	 parse-tree
+	 (list (read in))))))
+
+(defun add-content-div(parse-tree)
+  (let ((first-node (car parse-tree))
+	(remaining (cdr parse-tree)))
+    (list first-node
+	  (append (list 'div (list 'quote (list (list 'class "Content"))))
+		remaining))))
+
+(defun build-page (commands parse-tree)
+  (add-navbeta commands
+		 (add-navalpha commands
+				 (add-content-div    (add-toc commands parse-tree)))))
+  ;; (let* ((toc-parse-tree (add-toc commands parse-tree))
+  ;; 	 (content-parse-tree (add-content-div toc-parse-tree))
+  ;; 	 (nav-alpha-tree (add-navalpha commands content-parse-tree))
+  ;; 	 (nav-beta-tree (add-navbeta commands nav-alpha-tree)))
+  ;;   nav-beta-tree))
+
 (defun compile-article(filename)
   (let* ((parse-tree (parse-content (read-file filename)))
 	 (commands (interpret-commands parse-tree)))
