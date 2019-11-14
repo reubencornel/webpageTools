@@ -328,38 +328,16 @@
   (add-navbeta commands
 		 (add-navalpha commands
 				 (add-content-div    (add-toc commands parse-tree)))))
-  ;; (let* ((toc-parse-tree (add-toc commands parse-tree))
-  ;; 	 (content-parse-tree (add-content-div toc-parse-tree))
-  ;; 	 (nav-alpha-tree (add-navalpha commands content-parse-tree))
-  ;; 	 (nav-beta-tree (add-navbeta commands nav-alpha-tree)))
-  ;;   nav-beta-tree))
 
 (defun compile-article(filename)
-  (let* ((parse-tree (parse-content (read-file filename)))
-	 (commands (interpret-commands parse-tree)))
-    (format nil (apply #'page (build-page commands parse-tree)))))
-
-;; (defun compile-article(filename)
-;;   (let ((output-file (get-output-file-name filename)))
-;;     (with-open-file (out output-file
-;; 			 :direction :output
-;; 			 :if-exists :supersede)
-;;       (format out
-;; 	      (multiple-value-bind ( title-string title-list page-content nav-alpha nav-beta) (generate-page-content filename)
-;; 		(page
-;; 		 (pagetitle title-string)
-;; 		 (content
-;; 		  (concatenate 'string
-;;                                (if (not (zerop (length title-list))) ;; add a toc only if we find toc titles
-;;                                    (create-TOC title-list)
-;;                                    "")
-;; 			       (apply #'concatenate
-;; 				      (append (list 'string)
-;; 					      page-content))))
-;; 		 (if nav-alpha  (include-navalpha) "")
-;;                  (if nav-beta (include-navbeta) "")
-;; ))))))
-
+  (let ((output-file (get-output-file-name filename)))
+    (with-open-file (out output-file
+			 :direction :output
+			 :if-exists :supersede)
+      (let* ((parse-tree (parse-content (read-file filename)))
+	     (commands (interpret-commands parse-tree)))
+	(format out (apply #'page (build-page commands parse-tree)))))))
+    
 (defun main(command-line-args)
   (labels ((command-loop(args)
 	     (cond ((null args)
