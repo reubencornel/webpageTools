@@ -1,4 +1,4 @@
-;; Load 
+;; Load
 (load "src/pagegen.lisp")
 
 (defparameter *commands* '("NO-NAVALPHA" "NO-NAVBETA"))
@@ -72,47 +72,6 @@
 
 (defvar hr (htmlmacro hr t))
 
-(defun create-TOC(list)
-  (assert (consp list))
-  (let ((title-counter 0)
-	(subtitle-counter 0))
-    (div '((id "TOCWrapper"))
-	 (div '((id "tableofcontents"))
-	      (div '((class "TOCHeader"))
-		   "Table Of Contents"
-		   (hr))
-	      (div '((class "TOCContents"))
-		   (mapcar #'(lambda(y)
-			       (cond ((equal (car y)
-					     'title)
-				      (incf title-counter)
-				      (setf subtitle-counter 0)
-				      (funcall #'div
-					       '((class "TOCTitle"))
-					       (a (list (list 'href
-							      (format nil "#title~a" title-counter)))
-
-						  (format nil "~a. "
-							  title-counter)
-						  (cdr y))))
-
-				     ((equal (car y)
-					     'subtitle)
-				      (incf subtitle-counter)
-				      (funcall #'div
-					       '((class "TOCSubtitle"))
-					       (a (list (list 'href
-							      (format nil "#subtitle~a~a" title-counter subtitle-counter)))
-
-					       (format nil "~a.~a " title-counter subtitle-counter)
-					       (cdr y))))))
-			   list))))))
-
-			   ;; '((title "Introduction")
-			   ;;   (title "Computer Arithemetic")
-			   ;;   (subtitle "Mathematical formalisms"))))))))
-
-
 (defun title-p(x)
   "Predicate for identifying a title"
   (not (null (cl-ppcre:scan "^\\*\\* " x))))
@@ -125,12 +84,9 @@
   "Predicate for identifying a page title"
   (not (null (cl-ppcre:scan "^\\* " x))))
 
-
 (defun command-p(x)
   "Predicate to identify if a given line has a command"
   (not (null (cl-ppcre:scan "^\\# " x))))
-
-
 
 (defun get-output-file-name(filename)
   (assert (stringp filename))
@@ -143,100 +99,245 @@
 (defun code-end-p(x)
   (string= "CODE_END" x))
 
-(defun generate-page-content(filename)
-  (let* ((title-counter 0)
-	 (subtitle-counter 0)
-	 (title-string "")
-	 (title-list nil)
-         (code-mode nil)
-         (navalpha t)
-         (navbeta t)
-         (no-toc nil)
-	 (page-content
-	  (mapcar #'(lambda(x)
-		      (cond ((title-p x)
-			     (incf title-counter)
-			     (setf subtitle-counter 0)
-			     (setf title-list
-				   (append title-list
-					   (list (list 'title
-						       (subseq x 2)))))
-			     (h1 (a (list (list 'name (format nil "title~a" title-counter))
-					  (list 'class "title"))
-				    (subseq x 2))))
-                            ((command-p x) (let ((command (string-trim " " (subseq x 2))))
-                                             (cond ((string= command "no-navalpha") (setf navalpha nil))
-                                                   ((string= command "no-navbeta") (setf navbeta nil))
-                                                   ((string= command "no-toc") (setf no-toc t)))
-                                             ""))
+(defun generate-toc-entries(titles)
+  (mapcar #'(lambda(title)
+	      (let ((title-type (car title)))
+		(cond ((equal title-type 'ARTICLE-TITLE)
+		       (list 'div (list 'quote '((class "TOCTitle")))
+			     (append
+			      (list 'a (list 'quote (list (list 'href (format nil "#title~a" (second (second (second title))))))))
+			      (cdr (cdr title)))))
+		      ((equal title-type 'SUBTITLE)
+		       (append
+			(list 'div (list 'quote '((class "TOCSubtitle")))
+			      (append 
+			       (list 'a (list 'quote (list (list 'href (format nil "#subtitle~a~a" (second (second (second title)))
+									       (fourth (second (Second title))))))) )
+			       (cdr (cdr title))))))
+		      (t nil))))
+	  titles))
 
-			    ((page-title-p x) (setf title-string (subseq x 2))
-			     "")
-                            ((code-start-p x) (progn
-                                                (setf code-mode t)
-                                                x))
-                            ((code-end-p x) (progn
-                                              (setf code-mode nil)
-                                              x))
-                            (code-mode x)
+(defun create-new-TOC(titles)
+  (list 'div  (list 'quote '((id "TOCWrapper")))
+	(list 'div (list 'quote '((id "tableofcontents")))
+	      (list 'div (list 'quote '((class "TOCHeader")))
+		    "Table Of Contents"
+		    (list 'hr))
+	      (append
+	       (list 'div (list 'quote '((class "TOCContents"))))
+	       (generate-toc-entries titles)))))
 
-			    ((subtitle-p x)
-			     (incf subtitle-counter)
-			     (setf title-list
-				   (append title-list
-					   (list (list 'subtitle
-						       (subseq x 3)))))
-			     (h2 (a (list (list 'name (format nil "subtitle~a~a" title-counter subtitle-counter))
-					  (list 'class "title"))
-				    (subseq x 3))))
 
-			    (t (p x))))
-		  (remove-if #'(lambda(x) ;; Remove empty lines they have served their purpose
-				 (cl-ppcre:scan "^$" x))
-			     (mapcar #'(lambda(y) ;;Concatenate all groups into single strings
-					 (apply #'concatenate (append (list 'string )
-								      y)))
-				     (group-by #'(lambda(x) ;; Group lines based on blank lines
-						   (cl-ppcre:scan "^$" x))
-					       (mapcar #'(lambda(str) ;; add a space to the end of every line as long as it is
-							   (if (cl-ppcre:scan "^$" str) ;; not a blank line
-							       str
-							       (concatenate 'string str " ")))
-						       (cl-ppcre:split (coerce '(#\Newline) 'string) ;; Split the contents of the file on newline
-								       (read-file filename)))))))))
-    (values title-counter subtitle-counter title-string
-            (if no-toc
-                '()
-                title-list)
-            page-content navalpha navbeta)))
+(defun split-string-into-lines(string)
+  (cl-ppcre:split (coerce '(#\Newline) 'string) ;; Split the contents of the file on newline
+		  string))
 
-	      ;;       (let* ((title-list nil)
-	      ;; 	     (title-counter 0)
-	      ;; 	     (title-string "")
-	      ;; 	     (subtitle-counter 0)
-	      ;; 	     (page-content (generate-page-content filename)))
+(defun group-non-empty-lines(lines)
+  (group-by #'(lambda(x) ;; Group lines based on blank lines
+		(cl-ppcre:scan "^$" x))
+	    lines))
+
+(defun remove-empty-lines(grouped-lines)
+  (remove-if #'(lambda(x) ;; Remove empty lines they have served their purpose
+		 (and (listp x)
+		      (every (lambda(y)
+			       (cl-ppcre:scan "^$" y))
+			     x)))
+	     grouped-lines))
+
+(defun concat-with-space( list )
+  (format nil "~{~a~^ ~}" list))
+
+(defun pre-process-input(string)
+  (remove-empty-lines
+   (group-non-empty-lines
+    (split-string-into-lines string))))
+
+(defun event-emitter()
+  (let ((title-counter 0)
+	(subtitle-counter 0))
+    (lambda (grouped-lines)
+      (let ((first-line (car grouped-lines)))
+	(cond ((page-title-p first-line) (list 'pagetitle (subseq first-line 2)))
+	      ((title-p first-line)
+	       (setf subtitle-counter 0)
+	       (incf title-counter)
+	       (list 'article-title (list 'quote (list 'title-count title-counter)) (subseq first-line 2)))
+	       ((subtitle-p first-line)
+		(incf subtitle-counter)
+		(list 'subtitle (list 'quote (list 'title-count title-counter 'subtitle-count subtitle-counter)) (subseq first-line 2)))
+	      ((command-p first-line) (cons 'command (list (string-upcase (string-trim " " (subseq first-line 2))))))
+	      (t (cons 'p grouped-lines)))))))
+
+(defun command(&rest arg))
+
+(defun is-close-code-tag(leaf)
+  (and (stringp leaf)
+       (string= "</CODE-TAG>" (string-trim " " leaf))))
+
+(defun is-code-tag(leaf)
+  (and (stringp leaf)
+       (string= "<CODE-TAG>" (string-trim " " leaf))))
+
+
+(defun merge-code-leaves-helper (tree accumulator code-accumulator is-in-code)
+  (cond ((null tree)
+	 (if (> (length code-accumulator) 1)
+	     (append accumulator (list code-accumulator))
+	     accumulator))
+	(t (let ((leaf (car tree)))
+	     (cond ((and (is-close-code-tag (second leaf))
+			 is-in-code)
+		    (merge-code-leaves-helper (cdr tree)
+					      (append accumulator (list code-accumulator))
+					      () nil))
+		   ((and (is-code-tag (second leaf))
+			 (not is-in-code))
+		    (merge-code-leaves-helper (cdr tree)
+					      accumulator
+					      (list 'CODE-TAG)
+					      t))
+		   (is-in-code
+		    (merge-code-leaves-helper (cdr tree)
+					      accumulator
+					      (append code-accumulator (cdr leaf))
+					      t))
+		   (t
+		    (merge-code-leaves-helper (cdr tree)
+					      (append accumulator (list leaf))
+					      code-accumulator
+					      is-in-code)))))))
+
+
+(defun merge-code-leaves(parse-tree)
+  "This function merges leaves in the parse tree if the leaves occur between <CODE-START> and <CODE-END>"
+  (merge-code-leaves-helper parse-tree () () nil))
+
+(defun build-basic-parse-tree(input-string)
+  (let ((event-emitter (event-emitter)))
+    (mapcar event-emitter
+	    (pre-process-input input-string))))
+
+(defun article-title(&rest args)
+  (h1 (a (list (list 'name (format nil "title~a" (second (first args))))
+	       (list 'class "title"))
+	 (second args))))
+
+(defun subtitle(&rest args)
+    (h2 (a (list (list 'name (format nil "subtitle~a~a" (second (first args))  (fourth (first args))))
+		 (list 'class "subtitle"))
+	   (second args))))
+
+
+(defun string-concatenator-with-helper-function (init-string separator string-list)
+  (cond ((null string-list) init-string)
+	(t
+	 (string-concatenator-with-helper-function
+	  (if (string= init-string "")
+	      (concatenate 'string init-string (car string-list))
+	      (concatenate 'string init-string separator (car string-list)))
+	  separator
+	  (cdr string-list)))))
+
+(defun merge-strings-helper(parse-tree accumulator)
+  (cond ((null parse-tree) accumulator)
+	(t (let* ((leaf (car parse-tree))
+		  (type (car leaf)))
+	     (cond ((equal type 'code-tag)
+		    (merge-strings-helper
+		     (cdr parse-tree)
+		     (append accumulator
+			     (list (list  'CODE-TAG (string-concatenator-with-helper-function "" "~&" (cdr leaf)))))))
+		   (t (merge-strings-helper
+		       (cdr parse-tree)
+		       (append accumulator
+			       (list
+			        (if (consp (second leaf))
+				    (list type (second leaf)
+					  (string-concatenator-with-helper-function "" " " (cdr (cdr leaf))))
+				    (list type
+					  (string-concatenator-with-helper-function "" " " (cdr leaf)))))))))))))
+
+(defun merge-strings(parse-tree)
+  (merge-strings-helper parse-tree ()))
+
+(defun parse-content(string)
+  (merge-strings
+   (merge-code-leaves
+    (build-basic-parse-tree string))))
+
+(defun filter-titles(parse-tree)
+  (remove-if-not #'(lambda(x)
+		 (or (equal (car x) 'article-title)
+		     (equal (car x) 'subtitle)))
+		 parse-tree))
+
+(defun filter-commands(parse-tree)
+  (remove-if-not #'(lambda(x)
+		     (equal (car x) 'command))
+		 parse-tree))
+
+(defun interpret-commands(parse-tree)
+  (let* ((commands (mapcar #'(lambda(x) (intern (second x))) (filter-commands parse-tree)))
+	 (supported-commands (list 'NO-TOC 'NO-NAVALPHA 'NO-NAVBETA)))
+    (mapcar #'(lambda(command)
+		(find command commands :test #'string=))
+	    supported-commands)))
+
+(defun add-toc(commands parse-tree)
+  (if (find 'NO-TOC commands)
+      parse-tree
+      (append (list (first parse-tree))
+	      (list (create-new-TOC (filter-titles parse-tree)))
+	      (cdr parse-tree))))
+
+(defun add-navbeta(commands parse-tree)
+  (if (find 'NO-NAVBETA commands)
+      parse-tree
+      (let* ((local-navbeta-path (concatenate 'string (sb-ext:posix-getenv "PWD") "/" "navbeta.menu"))
+	     (file (if (null (probe-file  local-navbeta-path))
+				 *default-navbeta*
+				 local-navbeta-path)))
+	(with-open-file (in  file
+			     :if-does-not-exist nil)
+	  (print file)
+	  (if (null in)
+	      "File not found"
+	      (append
+	       parse-tree
+	       (list (read in))))))))
+      
+
+(defun add-navalpha(commands parse-tree)
+    (if (find 'NO-NAVALPHA commands)
+      parse-tree
+      (with-open-file (in *default-navalpha*
+			  :if-does-not-exist nil)
+	(append
+	 parse-tree
+	 (list (read in))))))
+
+(defun add-content-div(parse-tree)
+  (let ((first-node (car parse-tree))
+	(remaining (cdr parse-tree)))
+    (list first-node
+	  (append (list 'div (list 'quote (list (list 'class "Content"))))
+		remaining))))
+
+(defun build-page (commands parse-tree)
+  (add-navbeta commands
+		 (add-navalpha commands
+				 (add-content-div    (add-toc commands parse-tree)))))
 
 (defun compile-article(filename)
   (let ((output-file (get-output-file-name filename)))
     (with-open-file (out output-file
 			 :direction :output
 			 :if-exists :supersede)
-      (format out
-	      (multiple-value-bind (title-counter subtitle-counter title-string title-list page-content nav-alpha nav-beta) (generate-page-content filename)
-		(page
-		 (pagetitle title-string)
-		 (content
-		  (concatenate 'string
-                               (if (not (zerop (length title-list))) ;; add a toc only if we find toc titles
-                                   (create-TOC title-list)
-                                   "")
-			       (apply #'concatenate
-				      (append (list 'string)
-					      page-content))))
-		 (if nav-alpha  (include-navalpha) "")
-                 (if nav-beta (include-navbeta) "")
-))))))
-
+      (let* ((parse-tree (parse-content (read-file filename)))
+	     (commands (interpret-commands parse-tree)))
+	(format out (apply #'page (build-page commands parse-tree)))))))
+    
 (defun main(command-line-args)
   (labels ((command-loop(args)
 	     (cond ((null args)
