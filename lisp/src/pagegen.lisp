@@ -133,6 +133,7 @@
     (format glossary-handle "~&~a|" term)
     (format glossary-handle "~&~a" definition)
     (format glossary-handle "~&~a" "%%")))
+
 (defun glossary(glossary-text)
   (reference (concatenate 'string "glossary.html#" glossary-text)
 	glossary-text))
@@ -142,7 +143,10 @@
    (head
     (title "Reuben's Webpage")
     (link '(("rel" "stylesheet") ("href" "sitestyle.css")
-	    ("type" "text/css"))))
+	    ("type" "text/css")))
+    (link '(("rel" "stylesheet") ("href" "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css")
+	    (integrity "sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T")
+	    (crossorigin "anonymous"))))
    (body
     (if (listp page-contents)
 	(return-string-from-list
@@ -165,19 +169,19 @@
 		      (generate-menu (cdr menuitems))))))
 				      
 (defun navalpha(&rest menuitems)
+  (div '(("class" "col-lg-2 order-1"))
   (div '(("id" "navAlpha"))
-       (generate-menu menuitems)))
+       (generate-menu menuitems))))
 
 (defun navbeta (&rest menuitems)
+  (div '(("class" "col-lg-3 offset-lg-1 order-3"))
   (div '(("id" "navBeta"))
-       (generate-menu menuitems)))
+       (generate-menu menuitems))))
 
 (defun include-navbeta(&optional navbeta-file)
   (with-open-file (in 
 		   (concatenate 'string 
 				(sb-ext:posix-getenv "PWD")
-;				(extensions:unix-namestring 
-;				 (extensions:default-directory))
 				"/" "navbeta.menu"))
     (if (null in)
 	"FILE NOT FOUND"
