@@ -300,7 +300,6 @@
 				 local-navbeta-path)))
 	(with-open-file (in  file
 			     :if-does-not-exist nil)
-	  (print file)
 	  (if (null in)
 	      "File not found"
 	      (append
@@ -317,17 +316,35 @@
 	 parse-tree
 	 (list (read in))))))
 
+(defun wrap-in-div(attrs to-be-wrapped)
+  "attrs is a list of list of attrs"
+  (cons 'div (cons (list 'quote attrs)
+		   to-be-wrapped)))
+
 (defun add-content-div(parse-tree)
   (let ((first-node (car parse-tree))
 	(remaining (cdr parse-tree)))
     (list first-node
-	  (append (list 'div (list 'quote (list (list 'class "Content"))))
-		remaining))))
+	  (wrap-in-div '((class "col-lg-5 order-3 offset-lg-1"))
+		       (list (wrap-in-div '((class "content"))
+					  remaining))))))
+
+
+(defun add-row-div(parse-tree)
+  (let ((first-node (car parse-tree))
+	(remaining (cdr parse-tree)))
+    (list
+    (wrap-in-div '((class "container"))
+		  (list first-node
+			(wrap-in-div '(("class" "row"))
+				     remaining))))))
 
 (defun build-page (commands parse-tree)
-  (add-navbeta commands
-		 (add-navalpha commands
-				 (add-content-div    (add-toc commands parse-tree)))))
+  (add-row-div
+   (add-navbeta commands
+		(add-navalpha commands
+			      (add-content-div
+			       (add-toc commands parse-tree))))))
 
 (defun compile-article(filename)
   (let ((output-file (get-output-file-name filename)))
