@@ -219,12 +219,12 @@
 	    (pre-process-input input-string))))
 
 (defun article-title(&rest args)
-  (h1 (a (list (list 'name (format nil "title~a" (second (first args))))
+  (h3 (a (list (list 'name (format nil "title~a" (second (first args))))
 	       (list 'class "title"))
 	 (second args))))
 
 (defun subtitle(&rest args)
-    (h2 (a (list (list 'name (format nil "subtitle~a~a" (second (first args))  (fourth (first args))))
+    (b (a (list (list 'name (format nil "subtitle~a~a" (second (first args))  (fourth (first args))))
 		 (list 'class "subtitle"))
 	   (second args))))
 

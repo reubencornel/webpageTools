@@ -82,6 +82,7 @@
 (defvar div (htmlmacro div))
 (defvar h1 (htmlmacro h1))
 (defvar h2 (htmlmacro h2))
+(defvar h3 (htmlmacro h3))
 (defvar code-tag (htmlmacro code-tag))
 (defvar link (htmlmacro link t))
 (defvar center (htmlmacro center))
