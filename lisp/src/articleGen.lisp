@@ -360,13 +360,12 @@
 	     (cond ((null args)
 		    t)
 		   (t
-		    (let ((arg (car args)))
-					;Check if the extension is page...then we have a file
-		      (if (string= "article"
+		    (let ((arg (car args))) ;Check if the extension is page...then we have a file
+		      (when (string= "article"
 				   (subseq arg
 					   (- (length arg) 7)))
-			  (compile-article arg)
-			  (command-loop (cdr args))))))))
+			(compile-article arg))
+		      (command-loop (cdr args)))))))
     (command-loop command-line-args)))
 
 (defun main-func()
