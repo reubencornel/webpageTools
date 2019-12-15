@@ -37,7 +37,7 @@ EOF
 # Find all articles, find the titles in every file.
 # Emit a row of the format <FILENAME>.article|FILENAME|Title
 # Use awk to 1. replace all "_" wit "-" and emit a line of the format <a href="FILENAME.html">Date Title</a>
-find . -name '*.article' | xargs grep "\*\ " | cut -d '/' -f3- | sed 's/:\*/|/' | sed 's/\(.*\)\.article\(.*\)/\1.html|\1\2/' |  awk  'BEGIN{FS="|"; print("\n<ul>")} 
+find . -name '*.article' | sort | xargs grep "\*\ " | cut -d '/' -f3- | sed 's/:\*/|/' | sed 's/\(.*\)\.article\(.*\)/\1.html|\1\2/' |  awk  'BEGIN{FS="|"; print("\n<ul>")} 
 {date=$2; gsub(/_/,"-", date); print("<li><a href=\"" $1 "\">"date $3"</a>")}
 END{print("</UL>")}' >> blog.temp
 
